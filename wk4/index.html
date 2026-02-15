@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stage 3 Weather & Climate Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .correct { border-color: #22c55e; background-color: #f0fdf4; }
+        .incorrect { border-color: #ef4444; background-color: #fef2f2; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans text-slate-900 pb-10">
+
+    <div id="app" class="max-w-2xl mx-auto px-4 pt-10">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-blue-800 mb-2">🌦️ Weather & Climate Quiz</h1>
+            <p class="text-slate-600">Stage 3 - NSW Science Syllabus 2024</p>
+            <div id="progress-bar" class="w-full bg-slate-200 h-2 mt-4 rounded-full overflow-hidden">
+                <div id="progress-fill" class="bg-blue-500 h-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </header>
+
+        <!-- Quiz Container -->
+        <div id="quiz-container" class="glass rounded-2xl shadow-xl p-6 mb-6">
+            <div id="question-area">
+                <img id="q-image" src="" alt="Weather visual" class="w-full h-48 object-cover rounded-xl mb-6 hidden">
+                <h2 id="q-text" class="text-xl font-semibold mb-6">Loading question...</h2>
+                
+                <div class="grid grid-cols-1 gap-4">
+                    <button onclick="checkAnswer(true)" class="p-4 rounded-xl border-2 border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-left font-medium text-lg">
+                        True
+                    </button>
+                    <button onclick="checkAnswer(false)" class="p-4 rounded-xl border-2 border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-left font-medium text-lg">
+                        False
+                    </button>
+                </div>
+            </div>
+
+            <!-- Feedback Area -->
+            <div id="feedback" class="mt-6 p-4 rounded-xl hidden">
+                <p id="feedback-text" class="font-bold mb-2"></p>
+                <p id="rationale-text" class="text-sm text-slate-700 mb-4"></p>
+                <button onclick="nextQuestion()" class="w-full py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors">
+                    Next Question →
+                </button>
+            </div>
+        </div>
+
+        <!-- Final Results -->
+        <div id="results" class="glass rounded-2xl shadow-xl p-8 text-center hidden">
+            <h2 class="text-4xl font-bold text-blue-800 mb-4">Quiz Complete!</h2>
+            <p class="text-2xl mb-6">Your Score: <span id="final-score">0</span> / 13</p>
+            <button onclick="location.reload()" class="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700">
+                Try Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                q: "Weather describes the daily conditions of the atmosphere, while climate is the average weather over a long period of time (usually 30 years).",
+                a: true,
+                img: "https://images.unsplash.com/photo-1592210454359-9043f067919b?q=80&w=1000",
+                rationale: "Weather is what is happening right now; climate is the pattern over decades."
+            },
+            {
+                q: "On a weather map, a line with blue triangles represents a Warm Front.",
+                a: false,
+                img: "https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?q=80&w=1000",
+                rationale: "False! Blue triangles represent a Cold Front. Warm fronts use red semicircles."
+            },
+            {
+                q: "The Tropical Zone is located near the Equator and is generally warm and humid all year round.",
+                a: true,
+                img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000",
+                rationale: "Correct! The Equator receives the most direct sunlight."
+            },
+            {
+                q: "High pressure systems (marked with a capital 'H') usually bring clear skies and fine weather.",
+                a: true,
+                img: "https://images.unsplash.com/photo-1470252649358-96f3c80242c9?q=80&w=1000",
+                rationale: "Sinking air in High pressure systems prevents clouds from forming."
+            },
+            {
+                q: "Isobars are the plain lines on a weather map that connect areas with the same air pressure.",
+                a: true,
+                img: "https://images.unsplash.com/photo-1590055531615-f16d36fed844?q=80&w=1000",
+                rationale: "Correct. 'Iso' means equal and 'bar' means pressure."
+            },
+            {
+                q: "The Polar Zones are the coldest climate zones because they receive the least direct sunlight.",
+                a: true,
+                img: "https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=1000",
+                rationale: "Correct. The sun hits the poles at a very low angle."
+            },
+            {
+                q: "If isobars are packed very close together on a map, it means the wind will be very light and calm.",
+                a: false,
+                img: "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?q=80&w=1000",
+                rationale: "False! Close isobars mean very strong winds."
+            },
+            {
+                q: "Australia contains several different climate zones, including tropical, arid (desert), and temperate.",
+                a: true,
+                img: "https://images.unsplash.com/photo-1529108190281-9a4f620bc2d8?q=80&w=1000",
+                rationale: "Correct. Australia is massive and has many climates."
+            },
+            {
+                q: "A Low pressure system (marked with a capital 'L') is often associated with unstable weather, such as rain or clouds.",
+                a: true,
+                img: "https://images.unsplash.com/photo-1514632595861-4d918a362ef8?q=80&w=1000",
+                rationale: "Rising air in Low systems cools and forms clouds/rain."
+            },
+            {
+                q: "On a weather map, a Trough is shown as a dashed line and represents an area where air rises, often causing clouds and showers.",
+                a: true,
+                img: "https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?q=80&w=1000",
+                rationale: "Correct. Dash lines indicate troughs."
+            },
+            {
+                q: "A Monsoon is a seasonal change in wind direction that brings a distinct 'wet season' to Northern Australia.",
+                a: true,
+                img: "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?q=80&w=1000",
+                rationale: "Correct. The Summer Monsoon is vital for Northern Australia."
+            },
+            {
+                q: "Temperate Zones have four distinct seasons because they receive different amounts of direct sunlight as the Earth tilts.",
+                a: true,
+                img: "https://images.unsplash.com/photo-1472289065668-ce650ac443d2?q=80&w=1000",
+                rationale: "Correct. The Earth's tilt is the reason for our seasons."
+            },
+            {
+                q: "Predicting the weather for tomorrow is an example of studying Climate.",
+                a: false,
+                img: "https://images.unsplash.com/photo-1530906358829-e84b2769270f?q=80&w=1000",
+                rationale: "False! Short-term predictions are Weather."
+            }
+        ];
+
+        let currentQ = 0;
+        let score = 0;
+
+        function loadQuestion() {
+            const q = quizData[currentQ];
+            document.getElementById('q-text').innerText = q.q;
+            const img = document.getElementById('q-image');
+            img.src = q.img;
+            img.classList.remove('hidden');
+            
+            document.getElementById('feedback').classList.add('hidden');
+            document.getElementById('question-area').classList.remove('hidden');
+            
+            const progress = ((currentQ) / quizData.length) * 100;
+            document.getElementById('progress-fill').style.width = progress + "%";
+        }
+
+        function checkAnswer(userChoice) {
+            const q = quizData[currentQ];
+            const feedback = document.getElementById('feedback');
+            const feedbackText = document.getElementById('feedback-text');
+            const rationaleText = document.getElementById('rationale-text');
+            
+            feedback.classList.remove('hidden', 'correct', 'incorrect');
+            
+            if (userChoice === q.a) {
+                score++;
+                feedbackText.innerText = "✅ Correct!";
+                feedback.classList.add('correct');
+            } else {
+                feedbackText.innerText = "❌ Not quite!";
+                feedback.classList.add('incorrect');
+            }
+            
+            rationaleText.innerText = q.rationale;
+            document.getElementById('question-area').classList.add('hidden');
+        }
+
+        function nextQuestion() {
+            currentQ++;
+            if (currentQ < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('results').classList.remove('hidden');
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('progress-fill').style.width = "100%";
+        }
+
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>
